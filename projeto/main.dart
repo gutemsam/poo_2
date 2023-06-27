@@ -1,160 +1,297 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:solidart/solidart.dart';
-
-// Enumeração para representar o estado da tabela
-enum TableStatus { idle, loading, ready, error }
-
-// Classe responsável por carregar os dados e notificar as mudanças de estado da tabela
-class DataService {
-  final ValueNotifier<Map<String, dynamic>> tableStateNotifier =
-      ValueNotifier({
-    'status': TableStatus.idle,
-    'dataObjects': [],
-  });
-
-  // Função para carregar os dados com base no índice fornecido
-  void carregar(index) {
-    final funcoes = [carregarComidas];
-    tableStateNotifier.value = {
-      'status': TableStatus.loading,
-      'dataObjects': [],
-    };
-    funcoes[index]();
-  }
-
-  // Função para carregar as refeições de frango da API
-  void carregarComidas() {
-    var mealsUri = Uri(
-      scheme: 'https',
-      host: 'www.themealdb.com',
-      path: 'api/json/v1/1/search.php',
-      queryParameters: {'s': 'chicken'}, // Parâmetro de pesquisa de exemplo para refeições de frango
-    );
-
-    http.get(mealsUri).then((response) {
-      var mealsJson = jsonDecode(response.body);
-      tableStateNotifier.value = {
-        'status': TableStatus.ready,
-        'dataObjects': mealsJson['meals'],
-        'propertyNames': ["strMeal", "strCategory", "strArea"], // Nomes das propriedades a serem exibidas na lista
-        'columnNames': ["Name", "Category", "Area"], // Nomes das colunas da tabela
-      };
-    });
-  }
-}
-
-// Instância do DataService para gerenciar os dados da tabela
-final dataService = DataService();
+import 'dart:math';
 
 void main() {
-  Solidart.init();
-  MyApp app = MyApp();
-  runApp(app);
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Dicas"),
-        ),
-        body: ValueListenableBuilder(
-          valueListenable: dataService.tableStateNotifier,
-          builder: (_, value, __) {
-            switch (value['status']) {
-              case TableStatus.idle:
-                return Center(child: Text("Toque algum botão, abaixo...")); // Mensagem exibida quando a tabela está inativa
-              case TableStatus.loading:
-                return Center(child: CircularProgressIndicator()); // Indicador de carregamento exibido enquanto os dados estão sendo carregados
-              case TableStatus.ready:
-                return ListWidget(
-                  jsonObjects: value['dataObjects'],
-                  propertyNames: value['propertyNames'],
-                ); // Exibe a lista de objetos quando os dados estão prontos
-              case TableStatus.error:
-                return Text("Lascou"); // Mensagem de erro caso ocorra um erro no carregamento dos dados
-            }
-            return Text("..."); // Estado de fallback, caso nenhum dos casos anteriores seja correspondido
-          },
-        ),
-        bottomNavigationBar: NewNavBar(itemSelectedCallback: dataService.carregar),
+      title: 'Card App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: HomeScreen(),
     );
   }
 }
 
-// Widget para exibir a barra de navegação inferior
-class NewNavBar extends HookWidget {
-  final _itemSelectedCallback;
-
-  NewNavBar({itemSelectedCallback})
-      : _itemSelectedCallback = itemSelectedCallback ?? (int) {};
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    var state = useState(0);
-
-    return BottomNavigationBar(
-      onTap: (index) {
-        state.value = index;
-        _itemSelectedCallback(index);
-      },
-      currentIndex: state.value,
-      items: const [
-        BottomNavigationBarItem(
-          label: "Comidas",
-          icon: Icon(Icons.restaurant_menu), // Ícone para o item "Comidas" na barra de navegação
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Card App'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CardListScreen(),
+                  ),
+                );
+              },
+              child: const Text('Pesquisar Cartas'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AllCardsScreen(),
+                  ),
+                );
+              },
+              child: const Text('Todas as cartas'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                List<dynamic> deck = await _buildRandomDeck();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeckScreen(deck: deck),
+                  ),
+                );
+              },
+              child: const Text('Montar Deck'),
+            ),
+          ],
         ),
-      ],
+      ),
     );
+  }
+
+  Future<List<dynamic>> _buildRandomDeck() async {
+    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final cards = data['data'];
+      final random = Random();
+      List<dynamic> deck = [];
+
+      for (int i = 0; i < 60; i++) {
+        int randomIndex = random.nextInt(cards.length);
+        deck.add(cards[randomIndex]);
+      }
+
+      return deck;
+    } else {
+      throw Exception('Failed to load card data');
+    }
   }
 }
 
-// Widget para exibir a lista de objetos na tela
-class ListWidget extends StatelessWidget {
-  final List jsonObjects;
-  final List<String> propertyNames;
+class CardListScreen extends StatefulWidget {
+  const CardListScreen({Key? key}) : super(key: key);
 
-  ListWidget({this.jsonObjects = const [], this.propertyNames = const ["strMeal", "strCategory", "strArea"]});
+  @override
+  _CardListScreenState createState() => _CardListScreenState();
+}
+
+class _CardListScreenState extends State<CardListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  List<dynamic> _searchResults = [];
+
+  Future<void> _searchCards(String query) async {
+    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=$query'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _searchResults = data['data'];
+      });
+    } else {
+      // Error handling
+      print('Error: ${response.statusCode}');
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.all(10),
-      separatorBuilder: (_, __) => Divider(
-        height: 5,
-        thickness: 2,
-        indent: 10,
-        endIndent: 10,
-        color: Theme.of(context).primaryColor,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pesquisar Carta'),
       ),
-      itemCount: jsonObjects.length,
-      itemBuilder: (_, index) {
-        var title = jsonObjects[index][propertyNames[0]]; // Obtém o título do objeto com base na primeira propriedade
-        var content = propertyNames.sublist(1).map((prop) => jsonObjects[index][prop]).join(" - "); // Obtém o conteúdo concatenando as propriedades restantes
-
-        return Card(
-          shadowColor: Theme.of(context).primaryColor,
-          child: Column(
-            children: [
-              SizedBox(height: 10),
-              Text(
-                "$title\n",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ), // Exibe o título em negrito
-              Text(content), // Exibe o conteúdo
-              SizedBox(height: 10),
-            ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                _searchCards(value);
+              },
+              decoration: const InputDecoration(
+                labelText: 'Digite o nome da carta',
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
           ),
-        );
-      },
+          Expanded(
+            child: ListView.builder(
+              itemCount: _searchResults.length,
+              itemBuilder: (context, index) {
+                final card = _searchResults[index];
+                return ListTile(
+                  title: Text(card['name'] ?? ''),
+                  subtitle: Text(card['type'] ?? ''),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CardDetailScreen(card: card),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AllCardsScreen extends StatefulWidget {
+  const AllCardsScreen({Key? key}) : super(key: key);
+
+  @override
+  _AllCardsScreenState createState() => _AllCardsScreenState();
+}
+
+class _AllCardsScreenState extends State<AllCardsScreen> {
+  List<dynamic> _allCards = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getAllCards();
+  }
+
+  Future<void> _getAllCards() async {
+    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _allCards = data['data'];
+      });
+    } else {
+      // Error handling
+      print('Error: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Todas as cartas'),
+      ),
+      body: ListView.builder(
+        itemCount: _allCards.length,
+        itemBuilder: (context, index) {
+          final card = _allCards[index];
+          return ListTile(
+            title: Text(card['name'] ?? ''),
+            subtitle: Text(card['type'] ?? ''),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CardDetailScreen(card: card),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CardDetailScreen extends StatelessWidget {
+  final dynamic card;
+
+  const CardDetailScreen({Key? key, required this.card}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detalhes da carta'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              card['name'] ?? '',
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              card['desc'] ?? '',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DeckScreen extends StatelessWidget {
+  final List<dynamic> deck;
+
+  const DeckScreen({Key? key, required this.deck}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Deck sorteado'),
+      ),
+      body: ListView.builder(
+        itemCount: deck.length,
+        itemBuilder: (context, index) {
+          final card = deck[index];
+          return ListTile(
+            title: Text(card['name'] ?? ''),
+            subtitle: Text(card['type'] ?? ''),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CardDetailScreen(card: card),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
