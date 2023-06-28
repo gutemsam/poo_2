@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF8B4513), // Define a cor de fundo da tela
+      backgroundColor: const Color(0xFF563021), // Define a cor de fundo da tela
       body: Center(
         child: Container(
           width: 250, // Largura da carta
@@ -385,3 +385,6 @@ class DeckScreen extends StatelessWidget {
     );
   }
 }
+
+
+
