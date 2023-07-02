@@ -1,12 +1,16 @@
-import 'package:http/http.dart' as http; // Importa o pacote http para realizar requisições HTTP
-import 'dart:convert'; // Importa o pacote convert para lidar com codificação e decodificação JSON
-import 'dart:math'; // Importa o pacote math para gerar números aleatórios
-import 'package:flutter/material.dart'; // Importa o pacote flutter/material que contém os widgets do Flutter
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:math';
+import 'package:translator/translator.dart';
+import 'package:image/image.dart' as img;
+import 'package:solidart/solidart.dart';
 
 void main() {
-  runApp(MyApp()); // Inicia a aplicação Flutter
+  runApp(MyApp());
 }
 
+////////////////
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -27,7 +31,8 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
 
@@ -35,10 +40,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 3), // Define a duração da animação como 3 segundos
+      duration: const Duration(
+          seconds: 3), // Define a duração da animação como 3 segundos
       vsync: this,
     );
-    _rotationAnimation = Tween<double>(begin: 0, end: 1).animate(_animationController); // Cria uma animação de rotação
+    _rotationAnimation = Tween<double>(begin: 0, end: 1)
+        .animate(_animationController); // Cria uma animação de rotação
     _animationController.repeat(); // Repete a animação continuamente
     _loadData();
   }
@@ -55,7 +62,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _animationController.dispose(); // Libera os recursos do controlador de animação
+    _animationController
+        .dispose(); // Libera os recursos do controlador de animação
     super.dispose();
   }
 
@@ -78,7 +86,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
-            borderRadius: BorderRadius.circular(16), // Define um raio de borda circular para a carta
+            borderRadius: BorderRadius.circular(
+                16), // Define um raio de borda circular para a carta
           ),
           child: Stack(
             children: [
@@ -103,7 +112,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     'Card App', // Exibe o texto "Card App" no centro da carta
                     style: TextStyle(
                       fontSize: 24, // Define o tamanho da fonte como 24
-                      fontWeight: FontWeight.bold, // Define o peso da fonte como negrito
+                      fontWeight: FontWeight
+                          .bold, // Define o peso da fonte como negrito
                       color: Colors.white, // Define a cor do texto como branco
                     ),
                   ),
@@ -116,6 +126,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
   }
 }
+///////////////
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -124,7 +135,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Card App'), // Define o título da barra de aplicativos
+        title: const Text('Card App'),
       ),
       body: Center(
         child: Column(
@@ -135,11 +146,11 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CardListScreen(), // Navega para a tela CardListScreen
+                    builder: (context) => CardListScreen(),
                   ),
                 );
               },
-              child: const Text('Pesquisar Cartas'), // Exibe o texto "Pesquisar Cartas" no botão
+              child: const Text('Buscar Cartas'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -147,24 +158,24 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AllCardsScreen(), // Navega para a tela AllCardsScreen
+                    builder: (context) => AllCardsScreen(),
                   ),
                 );
               },
-              child: const Text('Todas as cartas'), // Exibe o texto "Todas as cartas" no botão
+              child: const Text('Todas as Cartas'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                List<dynamic> deck = await _buildRandomDeck(); // Monta um deck aleatório
+                List<dynamic> deck = await _buildRandomDeck();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DeckScreen(deck: deck), // Navega para a tela DeckScreen com o deck montado
+                    builder: (context) => DeckScreen(deck: deck),
                   ),
                 );
               },
-              child: const Text('Montar Deck'), // Exibe o texto "Montar Deck" no botão
+              child: const Text('Montar Deck'),
             ),
           ],
         ),
@@ -173,21 +184,22 @@ class HomeScreen extends StatelessWidget {
   }
 
   Future<List<dynamic>> _buildRandomDeck() async {
-    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php')); // Faz uma requisição para obter informações das cartas
+    final response = await http
+        .get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body); // Decodifica os dados da resposta em formato JSON
+      final data = json.decode(response.body);
       final cards = data['data'];
       final random = Random();
       List<dynamic> deck = [];
 
       for (int i = 0; i < 60; i++) {
         int randomIndex = random.nextInt(cards.length);
-        deck.add(cards[randomIndex]); // Adiciona uma carta aleatória ao deck
+        deck.add(cards[randomIndex]);
       }
 
-      return deck; // Retorna o deck montado
+      return deck;
     } else {
-      throw Exception('Failed to load card data'); // Lança uma exceção em caso de falha na carga dos dados das cartas
+      throw Exception('Failed to load card data');
     }
   }
 }
@@ -205,15 +217,16 @@ class _CardListScreenState extends State<CardListScreen> {
   List<dynamic> _searchResults = [];
 
   Future<void> _searchCards(String query) async {
-    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=$query')); // Faz uma requisição para pesquisar cartas com base no nome fornecido
+    final response = await http.get(Uri.parse(
+        'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=$query'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body); // Decodifica os dados da resposta em formato JSON
+      final data = json.decode(response.body);
       setState(() {
-        _searchResults = data['data']; // Atualiza a lista de resultados de pesquisa
+        _searchResults = data['data'];
       });
     } else {
       // Error handling
-      print('Error: ${response.statusCode}'); // Exibe o código de erro em caso de falha na requisição
+      print('Error: ${response.statusCode}');
     }
   }
 
@@ -227,7 +240,7 @@ class _CardListScreenState extends State<CardListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pesquisar Carta'), // Define o título da barra de aplicativos
+        title: const Text('Buscar Cartas'),
       ),
       body: Column(
         children: [
@@ -236,11 +249,11 @@ class _CardListScreenState extends State<CardListScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
-                _searchCards(value); // Realiza a pesquisa de cartas ao digitar no campo de texto
+                _searchCards(value);
               },
               decoration: const InputDecoration(
                 labelText: 'Digite o nome da carta',
-                suffixIcon: Icon(Icons.search), // Ícone de pesquisa no campo de texto
+                suffixIcon: Icon(Icons.search),
               ),
             ),
           ),
@@ -250,13 +263,13 @@ class _CardListScreenState extends State<CardListScreen> {
               itemBuilder: (context, index) {
                 final card = _searchResults[index];
                 return ListTile(
-                  title: Text(card['name'] ?? ''), // Exibe o nome da carta
-                  subtitle: Text(card['type'] ?? ''), // Exibe o tipo da carta
+                  title: Text(card['name'] ?? ''),
+                  subtitle: Text(card['type'] ?? ''),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CardDetailScreen(card: card), // Navega para a tela de detalhes da carta
+                        builder: (context) => CardDetailScreen(card: card),
                       ),
                     );
                   },
@@ -283,19 +296,20 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
   @override
   void initState() {
     super.initState();
-    _getAllCards(); // Obtém todas as cartas
+    _getAllCards();
   }
 
   Future<void> _getAllCards() async {
-    final response = await http.get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php')); // Faz uma requisição para obter todas as cartas
+    final response = await http
+        .get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body); // Decodifica os dados da resposta em formato JSON
+      final data = json.decode(response.body);
       setState(() {
-        _allCards = data['data']; // Atualiza a lista de todas as cartas
+        _allCards = data['data'];
       });
     } else {
       // Error handling
-      print('Error: ${response.statusCode}'); // Exibe o código de erro em caso de falha na requisição
+      print('Error: ${response.statusCode}');
     }
   }
 
@@ -303,20 +317,20 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todas as cartas'), // Define o título da barra de aplicativos
+        title: const Text('Todas as Cartas'),
       ),
       body: ListView.builder(
         itemCount: _allCards.length,
         itemBuilder: (context, index) {
           final card = _allCards[index];
           return ListTile(
-            title: Text(card['name'] ?? ''), // Exibe o nome da carta
-            subtitle: Text(card['type'] ?? ''), // Exibe o tipo da carta
+            title: Text(card['name'] ?? ''),
+            subtitle: Text(card['type'] ?? ''),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CardDetailScreen(card: card), // Navega para a tela de detalhes da carta
+                  builder: (context) => CardDetailScreen(card: card),
                 ),
               );
             },
@@ -327,25 +341,70 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
   }
 }
 
-class CardDetailScreen extends StatelessWidget {
+class CardDetailScreen extends StatefulWidget {
   final dynamic card;
 
   const CardDetailScreen({Key? key, required this.card}) : super(key: key);
 
   @override
+  _CardDetailScreenState createState() => _CardDetailScreenState();
+}
+
+class _CardDetailScreenState extends State<CardDetailScreen> {
+  String _translatedDescription = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _translateDescription();
+  }
+
+  Future<void> _translateDescription() async {
+    final translator = GoogleTranslator();
+    final description = widget.card['desc'] ?? '';
+    final translation =
+        await translator.translate(description, from: 'en', to: 'pt');
+    setState(() {
+      _translatedDescription = translation.text;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(card['name'] ?? ''), // Exibe o nome da carta na barra de aplicativos
+        title: const Text('Detalhes da Carta'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Tipo: ${card['type'] ?? ''}'), // Exibe o tipo da carta
+            Text(
+              widget.card['name'] ?? '',
+              style: const TextStyle(fontSize: 24),
+            ),
             const SizedBox(height: 16),
-            Text('Descrição: ${card['desc'] ?? ''}'), // Exibe a descrição da carta
+            Text(
+              _translatedDescription,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Ataque: ${widget.card['atk']}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Defesa: ${widget.card['def']}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Raça: ${widget.card['race']}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Tipo: ${widget.card['type']}',
+              style: const TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),
@@ -362,20 +421,20 @@ class DeckScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Deck'), // Define o título da barra de aplicativos
+        title: const Text('Deck'),
       ),
       body: ListView.builder(
         itemCount: deck.length,
         itemBuilder: (context, index) {
           final card = deck[index];
           return ListTile(
-            title: Text(card['name'] ?? ''), // Exibe o nome da carta
-            subtitle: Text(card['type'] ?? ''), // Exibe o tipo da carta
+            title: Text(card['name'] ?? ''),
+            subtitle: Text(card['type'] ?? ''),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CardDetailScreen(card: card), // Navega para a tela de detalhes da carta
+                  builder: (context) => CardDetailScreen(card: card),
                 ),
               );
             },
@@ -385,6 +444,3 @@ class DeckScreen extends StatelessWidget {
     );
   }
 }
-
-
-
