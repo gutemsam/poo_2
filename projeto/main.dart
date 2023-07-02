@@ -178,6 +178,18 @@ class HomeScreen extends StatelessWidget {
               },
               child: const Text('Montar Deck'),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DevelopersScreen(),
+                  ),
+                );
+              },
+              child: const Text('Desenvolvedores'),
+            ),
           ],
         ),
       ),
@@ -476,6 +488,45 @@ class DeckScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// Tela de desenvolvedores
+class DevelopersScreen extends StatelessWidget {
+  const DevelopersScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Desenvolvedores'),
+      ),
+      body: Column(
+        children: [
+          ListTile(
+            title: const Text('SAMUEL GUTEMBERG PEREIRA'),
+            subtitle: const Text('Instagram: @sam.gutemberg06'),
+            onTap: () {
+              // Abre o link do Instagram do Samuel Gutemberg
+            },
+          ),
+          ListTile(
+            title: const Text('CINTIA CAMPOS DE QUEIROZ'),
+            subtitle: const Text('Instagram: @cqcintia'),
+            onTap: () {
+              // Abre o link do Instagram da Cintia Campos de Queiroz
+            },
+          ),
+          ListTile(
+            title: const Text('BIANCA LAISE MEDEIROS CASSIANO'),
+            subtitle: const Text('Instagram: @biancamdros'),
+            onTap: () {
+              // Abre o link do Instagram da Bianca Laise Medeiros Cassiano
+            },
+          ),
+        ],
       ),
     );
   }
