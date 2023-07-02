@@ -3,13 +3,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import 'package:translator/translator.dart';
-import 'package:image/image.dart' as img;
-import 'package:solidart/solidart.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 void main() {
   runApp(MyApp());
 }
 
+// Aplicativo principal
 ////////////////
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -128,6 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
 }
 ///////////////
 
+// Tela inicial
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -183,6 +184,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // Função para construir um deck aleatório
   Future<List<dynamic>> _buildRandomDeck() async {
     final response = await http
         .get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
@@ -204,6 +206,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Tela de lista de cartas
 class CardListScreen extends StatefulWidget {
   const CardListScreen({Key? key}) : super(key: key);
 
@@ -216,6 +219,7 @@ class _CardListScreenState extends State<CardListScreen> {
 
   List<dynamic> _searchResults = [];
 
+  // Função para buscar cartas com base em um query de pesquisa
   Future<void> _searchCards(String query) async {
     final response = await http.get(Uri.parse(
         'https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=$query'));
@@ -225,7 +229,7 @@ class _CardListScreenState extends State<CardListScreen> {
         _searchResults = data['data'];
       });
     } else {
-      // Error handling
+      // Tratamento de erro
       print('Error: ${response.statusCode}');
     }
   }
@@ -265,6 +269,11 @@ class _CardListScreenState extends State<CardListScreen> {
                 return ListTile(
                   title: Text(card['name'] ?? ''),
                   subtitle: Text(card['type'] ?? ''),
+                  leading: CachedNetworkImage(
+                    imageUrl: card['card_images'][0]['image_url'],
+                    width: 60,
+                    height: 90,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -283,6 +292,7 @@ class _CardListScreenState extends State<CardListScreen> {
   }
 }
 
+// Tela de todas as cartas
 class AllCardsScreen extends StatefulWidget {
   const AllCardsScreen({Key? key}) : super(key: key);
 
@@ -299,6 +309,7 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
     _getAllCards();
   }
 
+  // Função para obter todas as cartas
   Future<void> _getAllCards() async {
     final response = await http
         .get(Uri.parse('https://db.ygoprodeck.com/api/v7/cardinfo.php'));
@@ -308,7 +319,7 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
         _allCards = data['data'];
       });
     } else {
-      // Error handling
+      // Tratamento de erro
       print('Error: ${response.statusCode}');
     }
   }
@@ -326,6 +337,11 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
           return ListTile(
             title: Text(card['name'] ?? ''),
             subtitle: Text(card['type'] ?? ''),
+            leading: CachedNetworkImage(
+              imageUrl: card['card_images'][0]['image_url'],
+              width: 60,
+              height: 90,
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -341,6 +357,7 @@ class _AllCardsScreenState extends State<AllCardsScreen> {
   }
 }
 
+// Tela de detalhes da carta
 class CardDetailScreen extends StatefulWidget {
   final dynamic card;
 
@@ -359,6 +376,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     _translateDescription();
   }
 
+  // Função para traduzir a descrição da carta para o idioma atual do dispositivo
   Future<void> _translateDescription() async {
     final translator = GoogleTranslator();
     final description = widget.card['desc'] ?? '';
@@ -371,38 +389,49 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final card = widget.card;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes da Carta'),
+        title: Text(card['name'] ?? ''),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.card['name'] ?? '',
-              style: const TextStyle(fontSize: 24),
+            CachedNetworkImage(
+              imageUrl: card['card_images'][0]['image_url'],
+              width: 180,
+              height: 270,
             ),
             const SizedBox(height: 16),
             Text(
-              _translatedDescription,
+              'Tipo: ${card['type']}',
               style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              'Ataque: ${widget.card['atk']}',
+              'Atributo: ${card['attribute']}',
               style: const TextStyle(fontSize: 16),
             ),
+            const SizedBox(height: 8),
             Text(
-              'Defesa: ${widget.card['def']}',
+              'Nível: ${card['level']}',
               style: const TextStyle(fontSize: 16),
             ),
+            const SizedBox(height: 8),
             Text(
-              'Raça: ${widget.card['race']}',
+              'Ataque: ${card['atk']}',
               style: const TextStyle(fontSize: 16),
             ),
+            const SizedBox(height: 8),
             Text(
-              'Tipo: ${widget.card['type']}',
+              'Defesa: ${card['def']}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Descrição: $_translatedDescription',
               style: const TextStyle(fontSize: 16),
             ),
           ],
@@ -412,6 +441,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 }
 
+// Tela do deck
 class DeckScreen extends StatelessWidget {
   final List<dynamic> deck;
 
@@ -421,15 +451,16 @@ class DeckScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Deck'),
+        title: const Text('Deck Aleatório'),
       ),
-      body: ListView.builder(
+      body: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+        ),
         itemCount: deck.length,
         itemBuilder: (context, index) {
           final card = deck[index];
-          return ListTile(
-            title: Text(card['name'] ?? ''),
-            subtitle: Text(card['type'] ?? ''),
+          return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
@@ -438,6 +469,11 @@ class DeckScreen extends StatelessWidget {
                 ),
               );
             },
+            child: CachedNetworkImage(
+              imageUrl: card['card_images'][0]['image_url'],
+              width: 180,
+              height: 270,
+            ),
           );
         },
       ),
