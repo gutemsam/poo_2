@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:translator/translator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart'; // Importa o pacote para abrir URLs
 
 void main() {
   runApp(MyApp());
@@ -494,8 +495,18 @@ class DeckScreen extends StatelessWidget {
 }
 
 // Tela de desenvolvedores
+
 class DevelopersScreen extends StatelessWidget {
   const DevelopersScreen({Key? key}) : super(key: key);
+
+  // Função para abrir uma URL
+  void _openURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -507,23 +518,23 @@ class DevelopersScreen extends StatelessWidget {
         children: [
           ListTile(
             title: const Text('SAMUEL GUTEMBERG PEREIRA'),
-            subtitle: const Text('Instagram: @sam.gutemberg06'),
+            subtitle: const Text('GitHub: @gutemsam'),
             onTap: () {
-              // Abre o link do Instagram do Samuel Gutemberg
+              _openURL('https://github.com/gutemsam');
             },
           ),
           ListTile(
             title: const Text('CINTIA CAMPOS DE QUEIROZ'),
-            subtitle: const Text('Instagram: @cqcintia'),
+            subtitle: const Text('GitHub: @cintiacq'),
             onTap: () {
-              // Abre o link do Instagram da Cintia Campos de Queiroz
+              _openURL('https://github.com/cintiacq');
             },
           ),
           ListTile(
             title: const Text('BIANCA LAISE MEDEIROS CASSIANO'),
-            subtitle: const Text('Instagram: @biancamdros'),
+            subtitle: const Text('GitHub: @biancamdros'),
             onTap: () {
-              // Abre o link do Instagram da Bianca Laise Medeiros Cassiano
+              _openURL('https://github.com/biancamdros');
             },
           ),
         ],
